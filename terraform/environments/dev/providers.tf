@@ -3,10 +3,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project = "Prolance"
+      Project     = "Prolance"
       Environment = var.environment
-      ManagedBy = "Terraform"
-      Owner = "Ali Yara"
+      ManagedBy   = "Terraform"
+      Owner       = "Ali Yara"
     }
   }
 }
