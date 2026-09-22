@@ -9,8 +9,8 @@ resource "aws_network_acl" "this" {
 }
 
 resource "aws_network_acl_rule" "this" {
-  for_each        = var.network_acl_rule
-  network_acl_id  = aws_network_acl.this.id
+  for_each       = var.network_acl_rule
+  network_acl_id = aws_network_acl.this.id
 
   rule_number     = each.value.rule_number
   egress          = each.value.egress
