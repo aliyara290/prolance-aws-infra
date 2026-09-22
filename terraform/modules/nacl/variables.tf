@@ -40,4 +40,5 @@ variable "network_acl_rule" {
 variable "tags" {
   description = "Additional tags"
   type        = map(string)
+  default = {}
 }
