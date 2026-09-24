@@ -31,8 +31,13 @@ variable "container_definitions" {
 
     secrets_arn = map(string) 
 
-    aws_log_gruoup = string
+    aws_log_group = string
   }))
+
+  validation {
+    condition = length(var.container_definitions) <= 9
+    error_message = "The maximum number of containers per task is 9."
+  }
 }
 
 variable "cpu" {
