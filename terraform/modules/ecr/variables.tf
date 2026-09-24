@@ -5,7 +5,7 @@ variable "environment" {
 
 variable "repositories" {
   description = "Repositories list"
-  type        = list(string)
+  type        = set(string)
 }
 
 variable "image_tag_mutability" {
@@ -14,7 +14,7 @@ variable "image_tag_mutability" {
   default     = "IMMUTABLE"
 
   validation {
-    condition     = contains(["MUTABLE", "IMMUTABLE, IMMUTABLE_WITH_EXCLUSION, MUTABLE_WITH_EXCLUSION"], var.image_tag_mutability)
+    condition     = contains(["MUTABLE", "IMMUTABLE", "IMMUTABLE_WITH_EXCLUSION", "MUTABLE_WITH_EXCLUSION"], var.image_tag_mutability)
     error_message = "image_tag_mutibility must be MUTABLE or IMMUTABLE or MUTABLE_WITH_EXCLUSION or IMMUTABLE_WITH_EXCLUSION"
   }
 }
@@ -45,7 +45,7 @@ variable "kms_key" {
 variable "keep_image_count" {
   description = "Number of images to keep in each repository"
   type        = number
-  default     = 30
+  default     = 15
 
   validation {
     condition     = var.keep_image_count > 0

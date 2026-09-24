@@ -1,4 +1,8 @@
-output "ecr_repository_id" {
-  description = "Get the ID of ECR Repository"
-  value       = aws_ecr_repository.this.id
+output "ecr_repository_ids" {
+  description = "IDs of the ECR repositories"
+
+  value = {
+    for name, repository in aws_ecr_repository.this :
+    name => repository.id
+  }
 }
