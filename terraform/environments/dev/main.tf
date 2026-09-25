@@ -199,6 +199,14 @@ module "elb" {
     api-gw = {
       port              = 8080
       health_check_path = "/actuator/health"
+    },
+    config-server = {
+      port = 8888
+      health_check_path = "/actuator/health"
+    },
+    eureka-server = {
+      port = 8761
+      health_check_path = "/actuator/health"
     }
   }
 
@@ -257,7 +265,7 @@ module "ecs_service" {
   security_groups_ids = each.key == "api-gateway" ? [module.api_gateway_sg.id] : [module.internal_services_sg.id]
 
   # Only api-gateway is registered with the ALB target group, because it's the only service that ALB talk with, so no need for target group for other service!
-  target_group_arn = each.key == "api-gateway" ? module.alb.target_group_arns["api-gw"] : null
+  target_group_arn = each.key == "api-gateway" ? module.elb.target_group_arns["api-gw"] : null
 
   log_retention_days = 30
 }
