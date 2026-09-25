@@ -30,7 +30,7 @@ resource "aws_ecr_lifecycle_policy" "this" {
     rules = [
       {
         rulePriority = 1
-        description   = "Expire images older than 20d"
+        description  = "Expire images older than 20d"
         selection = {
           tagStatus   = "any"
           countType   = "imageCountMoreThan"
