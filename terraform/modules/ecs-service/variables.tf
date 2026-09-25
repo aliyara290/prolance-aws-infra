@@ -16,26 +16,26 @@ variable "cluster_arn" {
 variable "container_definitions" {
   description = "Container definition for ECS task"
   type = map(object({
-    container_name = string
+    container_name  = string
     container_image = string
-    essential = bool
+    essential       = bool
 
     port_mappings = list(object({
-      name = string
+      name           = string
       container_port = number
-      host_port = number
-      protocol = string
+      host_port      = number
+      protocol       = string
     }))
 
     environment_variables = map(string)
 
-    secrets_arn = map(string) 
+    secrets_arn = map(string)
 
     aws_log_group = string
   }))
 
   validation {
-    condition = length(var.container_definitions) <= 9
+    condition     = length(var.container_definitions) <= 9
     error_message = "The maximum number of containers per task is 9."
   }
 }
@@ -74,6 +74,7 @@ variable "subnet_ids" {
 variable "security_groups_ids" {
   description = "Security Groups that will be attached to the ECS Tasks"
   type        = list(string)
+
   validation {
     condition     = length(var.security_groups_ids) >= 1
     error_message = "At least one security group must be provided"
@@ -134,17 +135,10 @@ variable "target_group_arn" {
   default     = null
 }
 
-variable "environment_variables" {
-  description = "Environment variables that will be passed to the ECS Tasks"
-  type        = map(string)
-  default     = {}
-}
-
-
 variable "additional_task_policy_statements" {
   description = "Additional IAM policy statements for ECS Task role"
-  type        = list(object)
-  default = []
+  type        = list(any)
+  default     = []
 }
 
 variable "log_retention_days" {
@@ -156,5 +150,5 @@ variable "log_retention_days" {
 variable "tags" {
   description = "Additional tags"
   type        = map(string)
-  default = {}
+  default     = {}
 }
