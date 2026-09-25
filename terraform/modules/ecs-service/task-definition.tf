@@ -8,8 +8,8 @@ resource "aws_ecs_task_definition" "this" {
   cpu    = var.cpu
   memory = var.memory
 
-  task_role_arn        = aws_iam_role.execution.arn
-  exexecution_role_arn = aws_iam_role.task.arn
+  task_role_arn      = aws_iam_role.task.arn
+  execution_role_arn = aws_iam_role.execution.arn
 
   container_definitions = jsonencode(
     [
@@ -18,12 +18,12 @@ resource "aws_ecs_task_definition" "this" {
         image     = container.container_image
         essential = container.essential
 
-        portMapping = [
+        portMappings = [
           for port in container.port_mappings : {
-            name         = port.name
-            continerPort = port.container_port
-            hostPort     = port.host_port
-            protocol     = port.protocol
+            name          = port.name
+            containerPort = port.container_port
+            hostPort      = port.host_port
+            protocol      = port.protocol
           }
         ]
 
@@ -45,8 +45,8 @@ resource "aws_ecs_task_definition" "this" {
           logDriver = "awslogs"
 
           options = {
-            "awslog-group"          = container.aws_log_group
-            "awslogs-region"        = data.aws_region.current.name
+            "awslogs-group"         = container.aws_log_group
+            "awslogs-region"        = data.aws_region.current.region
             "awslogs-stream-prefix" = container.container_name
           }
         }

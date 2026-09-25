@@ -16,23 +16,28 @@ variable "cluster_arn" {
 variable "container_definitions" {
   description = "Container definition for ECS task"
   type = map(object({
-    container_name = string
+    container_name  = string
     container_image = string
-    essential = bool
+    essential       = bool
 
     port_mappings = list(object({
-      name = string
+      name           = string
       container_port = number
-      host_port = number
-      protocol = string
+      host_port      = number
+      protocol       = string
     }))
 
     environment_variables = map(string)
 
-    secrets_arn = map(string) 
+    secrets_arn = map(string)
 
-    aws_log_gruoup = string
+    aws_log_group = string
   }))
+
+  validation {
+    condition     = length(var.container_definitions) <= 9
+    error_message = "The maximum number of containers per task is 9."
+  }
 }
 
 variable "cpu" {
@@ -82,11 +87,11 @@ variable "assign_public_ip" {
   default     = false
 }
 
-variable "execute_command" {
-  description = "Whether the Execution command should be enabled or not"
-  type        = bool
-  default     = true
-}
+# variable "execute_command" {
+#   description = "Whether the Execution command should be enabled or not"
+#   type        = bool
+#   default     = true
+# }
 
 variable "platform_version" {
   description = "Fargate platform version"
@@ -130,16 +135,10 @@ variable "target_group_arn" {
   default     = null
 }
 
-variable "environment_variables" {
-  description = "Environment variables that will be passed to the ECS Tasks"
-  type        = map(string)
-  default     = {}
-}
-
-
 variable "additional_task_policy_statements" {
   description = "Additional IAM policy statements for ECS Task role"
   type        = list(any)
+  default     = []
 }
 
 variable "log_retention_days" {
@@ -151,5 +150,5 @@ variable "log_retention_days" {
 variable "tags" {
   description = "Additional tags"
   type        = map(string)
-  default = {}
+  default     = {}
 }

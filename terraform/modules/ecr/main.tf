@@ -29,12 +29,12 @@ resource "aws_ecr_lifecycle_policy" "this" {
   policy = jsonencode({
     rules = [
       {
-        rulePeriority = 1
-        description   = "Expire images older than 20d"
+        rulePriority = 1
+        description  = "Expire images older than 20d"
         selection = {
-          tagStatus   = "tagged"
+          tagStatus   = "any"
           countType   = "imageCountMoreThan"
-          countNumber = 20
+          countNumber = var.keep_image_count
         }
         action = {
           type = "expire"

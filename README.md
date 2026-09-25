@@ -114,31 +114,6 @@ The container layer is designed around Amazon ECS with Fargate. The task definit
 
 ---
 
-## Project structure
-
-```text
-prolance-aws-infra/
-├── README.md
-├── terraform/
-│   ├── bootstrap/
-│   │   └── terraform-state/
-│   ├── environments/
-│   │   └── dev/
-│   └── modules/
-│       ├── ecr/
-│       ├── ecs-service/
-│       ├── iam/
-│       ├── monitoring/
-│       ├── nacl/
-│       ├── route53/
-│       ├── s3/
-│       ├── secrets/
-│       ├── security-groups/
-│       └── vpc/
-```
-
----
-
 ## Multi-AZ deployment strategy
 
 This project is designed around a multi-AZ deployment model. The VPC is split across at least two Availability Zones so that the platform is not dependent on a single AZ.
