@@ -3,13 +3,13 @@ resource "aws_ecs_service" "this" {
   cluster         = var.cluster_arn
   task_definition = aws_ecs_task_definition.this.arn
 
-  desired_count = 1
+  desired_count = var.desired_count
   launch_type   = "FARGATE"
 
   platform_version       = var.platform_version
   enable_execute_command = false
 
-  health_check_grace_period_seconds  = var.health_check_grace_period_seconds
+  health_check_grace_period_seconds  = var.target_group_arn != null ? var.health_check_grace_period_seconds : null
   deployment_maximum_percent         = var.deployment_maximum_percent
   deployment_minimum_healthy_percent = var.deployment_minimum_health_percent
 
@@ -29,10 +29,8 @@ resource "aws_ecs_service" "this" {
 
     content {
       target_group_arn = var.target_group_arn
-
-      container_name = var.container_definitions["api-gateway"].container_name
-
-      container_port = var.container_definitions["api-gateway"].port_mappings[0].container_port
+      container_name   = values(var.container_definitions)[0].container_name
+      container_port   = values(var.container_definitions)[0].port_mappings[0].container_port
     }
   }
 

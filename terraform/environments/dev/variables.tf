@@ -14,27 +14,32 @@ variable "environment" {
   }
 }
 
-variable "vpc_cidr" {
-  type = string
-}
-
-variable "public_subnets" {
+variable "ecs_services" {
   type = map(object({
-    cidr_block = string
-    az         = string
-  }))
-}
+    service_name = string
 
-variable "private_application_subnets" {
-  type = map(object({
-    cidr_block = string
-    az         = string
-  }))
-}
+    container_definitions = map(object({
+      container_name  = string
+      container_image = string
+      essential       = bool
 
-variable "private_database_subnets" {
-  type = map(object({
-    cidr_block = string
-    az         = string
+      port_mappings = list(object({
+        name           = string
+        container_port = number
+        host_port      = number
+        protocol       = string
+      }))
+
+      environment_variables = map(string)
+
+      secrets_arn = map(string)
+
+      aws_log_group = string
+    }))
+
+    cpu    = number
+    memory = number
+
+    desired_count = number
   }))
 }
