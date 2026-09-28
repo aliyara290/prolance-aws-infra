@@ -13,6 +13,12 @@ variable "cluster_arn" {
   type        = string
 }
 
+variable "rds_password" {
+  type      = string
+  default = "Yara2001"
+  sensitive = true
+}
+
 variable "container_definitions" {
   description = "Container definition for ECS task"
   type = map(object({
@@ -32,6 +38,8 @@ variable "container_definitions" {
     secrets_arn = map(string)
 
     aws_log_group = string
+
+    commands = optional(list(string), [])
   }))
 
   validation {
@@ -151,4 +159,10 @@ variable "tags" {
   description = "Additional tags"
   type        = map(string)
   default     = {}
+}
+
+variable "service_registry_arn" {
+  description = "ARN of the Service Registry (Cloud Map) if the service should be registered"
+  type        = string
+  default     = null
 }

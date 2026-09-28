@@ -14,6 +14,13 @@ variable "environment" {
   }
 }
 
+variable "rds_password" {
+  type      = string
+  default   = "Yara2001"
+  sensitive = true
+}
+
+
 variable "ecs_services" {
   type = map(object({
     service_name = string
@@ -35,6 +42,7 @@ variable "ecs_services" {
       secrets_arn = map(string)
 
       aws_log_group = string
+      commands      = optional(list(string), [])
     }))
 
     cpu    = number
