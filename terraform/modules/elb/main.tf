@@ -20,7 +20,7 @@ resource "aws_lb" "this" {
 resource "aws_lb_target_group" "this" {
   for_each = var.target_groups
 
-  name        = "${var.name}-${each.key}-${var.environment}"
+  name        = "${var.name}-${each.key}"
   port        = each.value.port
   protocol    = each.value.protocol
   target_type = each.value.target_type
@@ -58,8 +58,17 @@ resource "aws_lb_listener" "this" {
   certificate_arn = each.value.certificate_arn
 
   default_action {
-    type             = each.value.action_type
-    target_group_arn = each.value.action_type == "forward" ? aws_lb_target_group.this[each.value.target_group_key].arn : null
+    type = each.value.action_type
+
+    dynamic "forward" {
+      for_each = each.value.action_type == "forward" ? [1] : []
+
+      content {
+        target_group {
+          arn = aws_lb_target_group.this[each.value.target_group_key].arn
+        }
+      }
+    }
 
     dynamic "redirect" {
       for_each = each.value.action_type == "redirect" ? [1] : []

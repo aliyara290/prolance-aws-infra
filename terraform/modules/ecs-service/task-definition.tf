@@ -50,6 +50,8 @@ resource "aws_ecs_task_definition" "this" {
             "awslogs-stream-prefix" = container.container_name
           }
         }
+
+        command = container.commands
       }
     ]
   )
