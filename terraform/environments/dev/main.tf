@@ -370,7 +370,7 @@ module "rds" {
   backup_retention_period = 7
 
   deletion_protection = false
-  skip_final_snapshot = true
+  skip_final_snapshot = false
 }
 
 
@@ -414,7 +414,10 @@ module "ecs_service" {
           "KC_PROXY_HEADERS"      = "xforwarded"
         } : (contains(keys(local.db_names), each.key) ? {
           "SPRING_DATASOURCE_URL" = "jdbc:postgresql://${module.rds.endpoint}/${local.db_names[each.key]}"
-        } : {})
+        } : {}),
+        contains(["project-service", "crm-service", "notification-service", "tasks-service"], each.key) ? {
+          "SPRING_KAFKA_BOOTSTRAP_SERVERS" = module.msk.bootstrap_brokers
+        } : {}
       )
     }
   }
@@ -647,4 +650,44 @@ resource "aws_route53_record" "frontend" {
     zone_id                = module.frontend_cloudfront.cloudfront_hosted_zone_id
     evaluate_target_health = false
   }
+}
+
+# --- MSK Cluster for Microservices ---
+
+module "msk_sg" {
+  source      = "../../modules/security-groups"
+  environment = var.environment
+
+  sg_name        = "msk-cluster-sg"
+  sg_description = "Security group for MSK cluster"
+  vpc_id         = module.vpc.vpc_id
+
+  ingress_rules = {
+    kafka_plaintext = {
+      description                  = "Allow PLAINTEXT Kafka traffic from microservices"
+      from_port                    = 9092
+      to_port                      = 9092
+      ip_protocol                  = "tcp"
+      referenced_security_group_id = module.internal_services_sg.id
+    }
+  }
+
+  egress_rules = {
+    all_outbound = {
+      description = "Allow all outbound traffic"
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  }
+}
+
+module "msk" {
+  source = "../../modules/msk"
+
+  cluster_name           = "prolance-${var.environment}-kafka"
+  environment            = var.environment
+  
+  # MSK requires at least 2 subnets across different AZs
+  client_subnets         = module.vpc.private_app_subnet_ids
+  security_groups        = [module.msk_sg.id]
 }
