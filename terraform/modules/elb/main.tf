@@ -58,17 +58,8 @@ resource "aws_lb_listener" "this" {
   certificate_arn = each.value.certificate_arn
 
   default_action {
-    type = each.value.action_type
-
-    dynamic "forward" {
-      for_each = each.value.action_type == "forward" ? [1] : []
-
-      content {
-        target_group {
-          arn = aws_lb_target_group.this[each.value.target_group_key].arn
-        }
-      }
-    }
+    type             = each.value.action_type
+    target_group_arn = each.value.action_type == "forward" ? aws_lb_target_group.this[each.value.target_group_key].arn : null
 
     dynamic "redirect" {
       for_each = each.value.action_type == "redirect" ? [1] : []
