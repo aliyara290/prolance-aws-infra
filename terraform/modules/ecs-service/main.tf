@@ -7,7 +7,7 @@ resource "aws_ecs_service" "this" {
   launch_type   = "FARGATE"
 
   platform_version       = var.platform_version
-  enable_execute_command = false
+  enable_execute_command = var.execute_command
 
   health_check_grace_period_seconds  = var.target_group_arn != null ? var.health_check_grace_period_seconds : null
   deployment_maximum_percent         = var.deployment_maximum_percent
