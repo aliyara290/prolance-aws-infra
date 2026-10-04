@@ -370,7 +370,15 @@ module "rds" {
   backup_retention_period = 7
 
   deletion_protection = false
-  skip_final_snapshot = true
+  skip_final_snapshot = false
+}
+
+# S3 Bucket for Attachments
+module "attachment_bucket" {
+  source = "../../modules/s3"
+
+  bucket_name = "prolance-attachment-eu-west-3"
+  environment = var.environment
 }
 
 
@@ -414,10 +422,25 @@ module "ecs_service" {
           "KC_PROXY_HEADERS"      = "xforwarded"
         } : (contains(keys(local.db_names), each.key) ? {
           "SPRING_DATASOURCE_URL" = "jdbc:postgresql://${module.rds.endpoint}/${local.db_names[each.key]}"
-        } : {})
+        } : {}),
+        contains(["project-service", "crm-service", "notification-service", "tasks-service"], each.key) ? {
+          "SPRING_KAFKA_BOOTSTRAP_SERVERS" = module.msk.bootstrap_brokers
+        } : {}
       )
     }
   }
+
+    additional_task_policy_statements = each.key == "attachment-service" ? [
+    {
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+      Resource = [
+        "arn:aws:s3:::prolance-attachment-eu-west-3", 
+        "arn:aws:s3:::prolance-attachment-eu-west-3/*"
+      ]
+    }
+  ] : []
+
   cpu           = each.value.cpu
   memory        = each.value.memory
   desired_count = each.value.desired_count
@@ -548,14 +571,14 @@ output "frontend_cloudfront_domain_name" {
   description = "Domain name of the CloudFront distribution for the frontend"
 }
 
-# --- Route 53 Public DNS Records ---
+#  Route 53 Public DNS Records 
 
 data "aws_route53_zone" "public" {
   name         = "dxcprolance.site."
   private_zone = false
 }
 
-# --- SSL Certificate for CloudFront (Must be us-east-1) ---
+#  SSL Certificate for CloudFront (Must be us-east-1) 
 resource "aws_acm_certificate" "cloudfront_cert" {
   provider          = aws.us_east_1
   domain_name       = "dxcprolance.site"
@@ -589,7 +612,7 @@ resource "aws_acm_certificate_validation" "cloudfront_cert" {
   validation_record_fqdns = [for record in aws_route53_record.cloudfront_cert_validation : record.fqdn]
 }
 
-# --- SSL Certificate for ALB (eu-west-3) ---
+#  SSL Certificate for ALB (eu-west-3) 
 resource "aws_acm_certificate" "alb_cert" {
   domain_name       = "*.dxcprolance.site"
   validation_method = "DNS"
@@ -647,4 +670,44 @@ resource "aws_route53_record" "frontend" {
     zone_id                = module.frontend_cloudfront.cloudfront_hosted_zone_id
     evaluate_target_health = false
   }
+}
+
+# MSK Cluster for Microservices
+
+module "msk_sg" {
+  source      = "../../modules/security-groups"
+  environment = var.environment
+
+  sg_name        = "msk-cluster-sg"
+  sg_description = "Security group for MSK cluster"
+  vpc_id         = module.vpc.vpc_id
+
+  ingress_rules = {
+    kafka_plaintext = {
+      description                  = "Allow PLAINTEXT Kafka traffic from microservices"
+      from_port                    = 9092
+      to_port                      = 9092
+      ip_protocol                  = "tcp"
+      referenced_security_group_id = module.internal_services_sg.id
+    }
+  }
+
+  egress_rules = {
+    all_outbound = {
+      description = "Allow all outbound traffic"
+      ip_protocol = "-1"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  }
+}
+
+module "msk" {
+  source = "../../modules/msk"
+
+  cluster_name           = "prolance-${var.environment}-kafka"
+  environment            = var.environment
+  
+  # MSK requires at least 2 subnets across different AZs
+  client_subnets         = module.vpc.private_app_subnet_ids
+  security_groups        = [module.msk_sg.id]
 }
