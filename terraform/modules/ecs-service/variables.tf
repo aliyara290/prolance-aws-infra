@@ -95,11 +95,11 @@ variable "assign_public_ip" {
   default     = false
 }
 
-# variable "execute_command" {
-#   description = "Whether the Execution command should be enabled or not"
-#   type        = bool
-#   default     = true
-# }
+variable "execute_command" {
+  description = "Whether the Execution command should be enabled or not"
+  type        = bool
+  default     = true
+}
 
 variable "platform_version" {
   description = "Fargate platform version"
