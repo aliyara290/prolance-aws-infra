@@ -122,3 +122,16 @@ resource "aws_route_table_association" "private_db_subnets" {
   route_table_id = aws_route_table.private_db_subnets[each.key].id
   subnet_id      = each.value.id
 }
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.this.id
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids   = [for rt in aws_route_table.private_app_subnets : rt.id]
+
+  tags = {
+    Name = "Prolance-${var.environment}-s3-vpce"
+  }
+}
+

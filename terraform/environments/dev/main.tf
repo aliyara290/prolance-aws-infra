@@ -373,6 +373,14 @@ module "rds" {
   skip_final_snapshot = false
 }
 
+# S3 Bucket for Attachments
+module "attachment_bucket" {
+  source = "../../modules/s3"
+
+  bucket_name = "prolance-attachment-eu-west-3"
+  environment = var.environment
+}
+
 
 # ECS Services
 
@@ -421,6 +429,18 @@ module "ecs_service" {
       )
     }
   }
+
+    additional_task_policy_statements = each.key == "attachment-service" ? [
+    {
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+      Resource = [
+        "arn:aws:s3:::prolance-attachment-eu-west-3", 
+        "arn:aws:s3:::prolance-attachment-eu-west-3/*"
+      ]
+    }
+  ] : []
+
   cpu           = each.value.cpu
   memory        = each.value.memory
   desired_count = each.value.desired_count
@@ -551,14 +571,14 @@ output "frontend_cloudfront_domain_name" {
   description = "Domain name of the CloudFront distribution for the frontend"
 }
 
-# --- Route 53 Public DNS Records ---
+#  Route 53 Public DNS Records 
 
 data "aws_route53_zone" "public" {
   name         = "dxcprolance.site."
   private_zone = false
 }
 
-# --- SSL Certificate for CloudFront (Must be us-east-1) ---
+#  SSL Certificate for CloudFront (Must be us-east-1) 
 resource "aws_acm_certificate" "cloudfront_cert" {
   provider          = aws.us_east_1
   domain_name       = "dxcprolance.site"
@@ -592,7 +612,7 @@ resource "aws_acm_certificate_validation" "cloudfront_cert" {
   validation_record_fqdns = [for record in aws_route53_record.cloudfront_cert_validation : record.fqdn]
 }
 
-# --- SSL Certificate for ALB (eu-west-3) ---
+#  SSL Certificate for ALB (eu-west-3) 
 resource "aws_acm_certificate" "alb_cert" {
   domain_name       = "*.dxcprolance.site"
   validation_method = "DNS"
@@ -652,7 +672,7 @@ resource "aws_route53_record" "frontend" {
   }
 }
 
-# --- MSK Cluster for Microservices ---
+# MSK Cluster for Microservices
 
 module "msk_sg" {
   source      = "../../modules/security-groups"
